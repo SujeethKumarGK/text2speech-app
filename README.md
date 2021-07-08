@@ -1,3 +1,3 @@
 # text2speech-app
 
-https://share.streamlit.io/sujeethkumargk/translator1/main/pbl.py
+https://share.streamlit.io/sujeethkumargk/text2speech-app/main/app.py
