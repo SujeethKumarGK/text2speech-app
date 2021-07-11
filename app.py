@@ -453,7 +453,7 @@ def main():
                         st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
                         speech = gTTS(text = translated, lang = 'kn', slow = False)
                         speech.save('user_trans.mp3')
-                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_file = open('user_trans.mp3', 'rb') 
                         audio_bytes = audio_file.read()
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
@@ -562,7 +562,7 @@ def main():
                         speech.save('user_trans.mp3')
                         audio_file = open('user_trans.mp3', 'rb')
                         audio_bytes = audio_file.read()
-                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)   
                         st.success(translated)
                         st.image(image)
                     if dest_lang=='hi':
