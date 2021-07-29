@@ -74,7 +74,7 @@ def main():
         #     #time.sleep(0.1)
         if images is not None:
 #             image_file = set_image_dpi(images)
-            imag_file=Image.open(image_file)
+            image=Image.open(image_file)
             size=(240,240)
             image=image.resize(size)
             # print(image_file)
