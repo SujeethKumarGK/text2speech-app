@@ -8,16 +8,31 @@ import argparse
 from PIL import Image,ImageEnhance
 from IPython.display import Audio
 from PIL import ImageDraw
-from  easyocr import Reader
+from easyocr import Reader
 import detectlanguage
 import speech_recognition as sr
+import time
+import os
+import pyaudio
+from IPython.display import Audio
+#from ipywebrtc import AudioRecorder
+#from streamlit_player import st_player
 from deep_translator import (GoogleTranslator,MicrosoftTranslator,PonsTranslator,LingueeTranslator,MyMemoryTranslator,YandexTranslator,DeepL,QCRI,single_detection,batch_detection)
 langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-ap = argparse.ArgumentParser()
+# st.balloons()
+# ap = argparse.ArgumentParser()
 translator = Translator()
-args = vars(ap.parse_args())
+# args = vars(ap.parse_args())
 now = dt.date.today()
+time=time.ctime()
+# gif=Image.open('yo.webp',format = 'GIF')
+# st.image(gif)
+#https://www.google.com/url?sa=i&url=https%3A%2F%2Ftenor.com%2Fview%2Fkick-buttowski-matrix-throwing-ball-playing-kid-butowski-gif-11711297&psig=AOvVaw0lNLxYV7qIzlySO1PnNZE3&ust=1626078041336000&source=images&cd=vfe&ved=0CAoQjRxqFwoTCLCG-fPK2vECFQAAAAAdAAAAABAP
+st.image('https://media.giphy.com/media/xUPGGDNsLvqsBOhuU0/giphy.gif',width=500)
 st.write(f"Today is {now}")
+st.write('U checked the Website on {}'.format(time))
+# st.write("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=200)
+# st_player('pi_video.mp4')
 # print(translator.detect('この文章は日本語で書かれました。'))
 def draw_boxes(image, bounds, color='yellow',width=2): # function to draw bounding boxes around the text
     draw=ImageDraw.Draw(image)
@@ -26,15 +41,36 @@ def draw_boxes(image, bounds, color='yellow',width=2): # function to draw boundi
         draw.line([*p0, *p1, *p2, *p3, *p0], fill=color, width=width)
     return image
 
+def set_image_dpi(file_path):
+    im = Image.open(file_path)
+    length_x, width_y = im.size
+    factor = min(1, float(1024.0 / length_x))
+    size = int(factor * length_x), int(factor * width_y)
+    im_resized = im.resize(size, Image.ANTIALIAS)
+    temp_file = tempfile.NamedTemporaryFile(delete=False,   suffix='.png')
+    temp_filename = temp_file.name
+    im_resized.save(temp_filename, dpi=(300, 300))
+    return temp_filename
 
 def main():
-    st.title('Text To Speech')
-    st.subheader('Using streamlit and opencv')
-    choice=st.sidebar.selectbox('Select Activity',['Text to Speech','Translation','About Us'])
+    st.title('Image to Speech')
+    st.subheader('Using streamlit')
+    choice=st.sidebar.selectbox('Select Activity',['Image to Speech','Translation','Speech Recognition','About Us'])
 
-    if choice=='Text to Speech':
-        image_file = st.file_uploader("Upload Image",type=['jpg','png','jpeg'])
-        if image_file is not None:
+    if choice=='Image to Speech':
+        images = st.file_uploader("Upload Image",type=['jpg','png','jpeg'])
+        #print(images)
+        # st.progress(100)
+        # file_details = {"Filename":image_file,"FileType":image_file.type,"FileSize":image_file.size}
+        # st.write(file_details)
+        # latest_iteration = st.empty()
+        # my_bar = st.progress(0)
+        # for i in range(100):
+        #     latest_iteration.text(f'Iteration {i+1}')
+        #     my_bar.progress(i + 1)
+        #     #time.sleep(0.1)
+        if images is not None:
+            image_file = set_image_dpi(images)
             image=Image.open(image_file)
             size=(240,240)
             image=image.resize(size)
@@ -52,7 +88,7 @@ def main():
                 reader = Reader([lang])
                 bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
                 draw_boxes(image,bounds)
-                text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                text_list=reader.readtext(image,link_threshold=0.9,add_margin=0.55,width_ths=0.7,decoder='greedy',blocklist='=-',detail=0)
                 text_comb=' '.join(text_list)
                 if dest_lang=='en':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
@@ -66,6 +102,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='kn':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -78,6 +115,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='ta':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -90,6 +128,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='hi':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -102,6 +141,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='te':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -114,6 +154,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='ja':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -126,6 +167,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='fr':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -138,6 +180,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Kannada':
                 if st.button('Process'):
                     # st.write(text_comb)
@@ -161,6 +204,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='kn':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -173,6 +217,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ta':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -185,6 +230,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='hi':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -197,6 +243,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='te':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -209,6 +256,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ja':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -221,6 +269,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='fr':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -233,6 +282,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Telugu':
                 if st.button('Process'):
                     # st.write(text_comb)
@@ -256,6 +306,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='kn':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -268,6 +319,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ta':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -280,6 +332,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='hi':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -292,6 +345,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='te':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -304,6 +358,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ja':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -316,6 +371,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='fr':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -328,6 +384,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Tamil':
                 if st.button('Process'):
                     # st.write(text_comb)
@@ -351,6 +408,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='kn':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -363,6 +421,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ta':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -375,6 +434,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='hi':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -387,6 +447,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='te':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -399,6 +460,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ja':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -411,6 +473,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='fr':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -423,6 +486,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Hindi':
                 if st.button('Process'):
                     # st.write(text_comb)
@@ -446,6 +510,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='kn':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -453,11 +518,12 @@ def main():
                         st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
                         speech = gTTS(text = translated, lang = 'kn', slow = False)
                         speech.save('user_trans.mp3')
-                        audio_file = open('user_trans.mp3', 'rb') 
+                        audio_file = open('user_trans.mp3', 'rb')
                         audio_bytes = audio_file.read()
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ta':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -470,6 +536,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='hi':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -482,6 +549,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='te':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -494,6 +562,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ja':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -506,6 +575,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='fr':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -518,6 +588,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Japanese':
                 if st.button('Process'):
                     # st.write(text_comb)
@@ -541,6 +612,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='kn':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -553,6 +625,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ta':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -562,9 +635,10 @@ def main():
                         speech.save('user_trans.mp3')
                         audio_file = open('user_trans.mp3', 'rb')
                         audio_bytes = audio_file.read()
-                        st.audio(audio_bytes, format='audio/ogg',start_time=0)   
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='hi':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -577,6 +651,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='te':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -589,6 +664,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='ja':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -601,6 +677,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                     if dest_lang=='fr':
                         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                         lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -613,6 +690,7 @@ def main():
                         st.audio(audio_bytes, format='audio/ogg',start_time=0)
                         st.success(translated)
                         st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='French':
             if st.button('Process'):
                 # st.write(text_comb)
@@ -636,6 +714,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='kn':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -648,6 +727,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='ta':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -660,6 +740,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='hi':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -672,6 +753,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='te':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -684,6 +766,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='ja':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -696,6 +779,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
                 if dest_lang=='fr':
                     translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
                     lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -708,6 +792,7 @@ def main():
                     st.audio(audio_bytes, format='audio/ogg',start_time=0)
                     st.success(translated)
                     st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
     if choice=='Translation':
         st.subheader('Here the entered text is converted to requied language')
         st.write(f"Translate your thoughts.")
@@ -724,6 +809,7 @@ def main():
                 audio_file = open('user_trans.mp3', 'rb')
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Kannada':
             if st.button('Translate'):
                 lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -734,6 +820,7 @@ def main():
                 audio_file = open('user_trans.mp3', 'rb')
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Tamil':
             if st.button('Translate'):
                 lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -744,6 +831,7 @@ def main():
                 audio_file = open('user_trans.mp3', 'rb')
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Japanese':
             if st.button('Translate'):
                 lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -754,6 +842,7 @@ def main():
                 audio_file = open('user_trans.mp3', 'rb')
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='French':
             if st.button('Translate'):
                 lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -764,6 +853,7 @@ def main():
                 audio_file = open('user_trans.mp3', 'rb')
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
         if list_lang=='Hindi':
             if st.button('Translate'):
                 lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
@@ -774,6 +864,7 @@ def main():
                 audio_file = open('user_trans.mp3', 'rb')
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
     if choice=='About Us':
          st.title('About the Text To Speech')
          st.subheader('Steps to Follow :-')
@@ -791,16 +882,963 @@ def main():
          st.write('4.Click on the Process button \n')
          st.write('5.Ola text is converted and the required speech is ready \n')
          st.write('6.Enjoy Learning New things \n')
-         st.subheader("Expect the Best , Plan for the Worst, and Prepare to be Surprised  \n"
-                                                                                            "  -Denis Waitly")
          st.markdown("""Built with Streamlit by \n
          Ranjith R  \n
          Ullas Raju CR  \n
          Sujeeth Kumar GK  \n
          Madhan Kumar M """)
-         st.subheader('website url: ')
+         st.subheader('website url: https://share.streamlit.io/madhan02k/text2speech_app/main/app.py ')
+         st.subheader("Expect the Best , Plan for the Worst, and Prepare to be Surprised  \n"
+                      "  -Denis Waitly")
+         video_file=open('kicku.mp4','rb')
+         video_bytes=video_file.read()
+         st.video(video_bytes)
+
+    if choice=='Speech Recognition':
+        if st.button("Click to record"): 
+            r=sr.Recognizer()
+            with sr.Microphone() as source:
+                st.write("say something")
+                audio=r.listen(source)
+                try:
+                    text1=r.recognize_google(audio)
+                    st.write("You  said :",text1)
+                except:
+                    st.write("Please say again ..")
+                # st.write text
+            hr=gTTS(text=text1,lang='en')
+            hr.save('user_trans.wav')
+            audio_file = open('user_trans.wav', 'rb')
+            audio_bytes = audio_file.read()
+            st.audio(audio_bytes, format='audio/ogg',start_time=0)
+            st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
 
 
+
+
+
+
+
+
+
+
+
+
+if __name__=="__main__":
+    main()import streamlit as st
+import cv2 as cv
+import numpy as np
+import datetime as dt
+from googletrans import Translator
+from gtts import gTTS
+import argparse
+from PIL import Image,ImageEnhance
+from IPython.display import Audio
+from PIL import ImageDraw
+from easyocr import Reader
+import detectlanguage
+import speech_recognition as sr
+import time
+import os
+import pyaudio
+from IPython.display import Audio
+#from ipywebrtc import AudioRecorder
+#from streamlit_player import st_player
+from deep_translator import (GoogleTranslator,MicrosoftTranslator,PonsTranslator,LingueeTranslator,MyMemoryTranslator,YandexTranslator,DeepL,QCRI,single_detection,batch_detection)
+langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+# st.balloons()
+# ap = argparse.ArgumentParser()
+translator = Translator()
+# args = vars(ap.parse_args())
+now = dt.date.today()
+time=time.ctime()
+# gif=Image.open('yo.webp',format = 'GIF')
+# st.image(gif)
+#https://www.google.com/url?sa=i&url=https%3A%2F%2Ftenor.com%2Fview%2Fkick-buttowski-matrix-throwing-ball-playing-kid-butowski-gif-11711297&psig=AOvVaw0lNLxYV7qIzlySO1PnNZE3&ust=1626078041336000&source=images&cd=vfe&ved=0CAoQjRxqFwoTCLCG-fPK2vECFQAAAAAdAAAAABAP
+st.image('https://media.giphy.com/media/xUPGGDNsLvqsBOhuU0/giphy.gif',width=500)
+st.write(f"Today is {now}")
+st.write('U checked the Website on {}'.format(time))
+# st.write("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=200)
+# st_player('pi_video.mp4')
+# print(translator.detect('この文章は日本語で書かれました。'))
+def draw_boxes(image, bounds, color='yellow',width=2): # function to draw bounding boxes around the text
+    draw=ImageDraw.Draw(image)
+    for bound in bounds:
+        p0, p1, p2, p3 = bound[0]
+        draw.line([*p0, *p1, *p2, *p3, *p0], fill=color, width=width)
+    return image
+
+def set_image_dpi(file_path):
+    im = Image.open(file_path)
+    length_x, width_y = im.size
+    factor = min(1, float(1024.0 / length_x))
+    size = int(factor * length_x), int(factor * width_y)
+    im_resized = im.resize(size, Image.ANTIALIAS)
+    temp_file = tempfile.NamedTemporaryFile(delete=False,   suffix='.png')
+    temp_filename = temp_file.name
+    im_resized.save(temp_filename, dpi=(300, 300))
+    return temp_filename
+
+def main():
+    st.title('Image to Speech')
+    st.subheader('Using streamlit')
+    choice=st.sidebar.selectbox('Select Activity',['Image to Speech','Translation','Speech Recognition','About Us'])
+
+    if choice=='Image to Speech':
+        images = st.file_uploader("Upload Image",type=['jpg','png','jpeg'])
+        #print(images)
+        # st.progress(100)
+        # file_details = {"Filename":image_file,"FileType":image_file.type,"FileSize":image_file.size}
+        # st.write(file_details)
+        # latest_iteration = st.empty()
+        # my_bar = st.progress(0)
+        # for i in range(100):
+        #     latest_iteration.text(f'Iteration {i+1}')
+        #     my_bar.progress(i + 1)
+        #     #time.sleep(0.1)
+        if images is not None:
+            image_file = set_image_dpi(images)
+            image=Image.open(image_file)
+            size=(240,240)
+            image=image.resize(size)
+            # print(image_file)
+            st.image(image)
+        list_lang=st.sidebar.selectbox("Select language Present in th image",['English','Kannada','Telugu','Tamil','Hindi','Japanese','French'])
+        dest_lang=st.sidebar.selectbox('Select Destination Language Key',['en','kn','ta','te','hi','ja','fr'])
+        print(langs_dict)
+        if list_lang=='English':
+            if st.button('Process'):
+                # st.write(text_comb)
+                # txt=translator.detect('この文章は日本語で書かれました。')
+                image=Image.open(image_file)
+                lang='en'
+                reader = Reader([lang])
+                bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                draw_boxes(image,bounds)
+                text_list=reader.readtext(image,link_threshold=0.9,add_margin=0.55,width_ths=0.7,decoder='greedy',blocklist='=-',detail=0)
+                text_comb=' '.join(text_list)
+                if dest_lang=='en':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'en', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='kn':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'kn', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='ta':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'ta', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='hi':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'hi', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='te':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'te', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='ja':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'ja', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='fr':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'fr', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Kannada':
+                if st.button('Process'):
+                    # st.write(text_comb)
+                    # txt=translator.detect('この文章は日本語で書かれました。')
+                    image=Image.open(image_file)
+                    lang='kn'
+                    reader = Reader([lang])
+                    bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                    draw_boxes(image,bounds)
+                    text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                    text_comb=' '.join(text_list)
+                    if dest_lang=='en':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'en', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='kn':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'kn', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ta':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ta', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='hi':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'hi', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='te':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'te', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ja':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ja', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='fr':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'fr', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Telugu':
+                if st.button('Process'):
+                    # st.write(text_comb)
+                    # txt=translator.detect('この文章は日本語で書かれました。')
+                    image=Image.open(image_file)
+                    lang='te'
+                    reader = Reader([lang])
+                    bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                    draw_boxes(image,bounds)
+                    text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                    text_comb=' '.join(text_list)
+                    if dest_lang=='en':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'en', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='kn':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'kn', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ta':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ta', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='hi':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'hi', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='te':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'te', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ja':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ja', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='fr':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'fr', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Tamil':
+                if st.button('Process'):
+                    # st.write(text_comb)
+                    # txt=translator.detect('この文章は日本語で書かれました。')
+                    image=Image.open(image_file)
+                    lang='ta'
+                    reader = Reader([lang])
+                    bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                    draw_boxes(image,bounds)
+                    text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                    text_comb=' '.join(text_list)
+                    if dest_lang=='en':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'en', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='kn':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'kn', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ta':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ta', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='hi':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'hi', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='te':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'te', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ja':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ja', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='fr':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'fr', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Hindi':
+                if st.button('Process'):
+                    # st.write(text_comb)
+                    # txt=translator.detect('この文章は日本語で書かれました。')
+                    image=Image.open(image_file)
+                    lang='hi'
+                    reader = Reader([lang])
+                    bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                    draw_boxes(image,bounds)
+                    text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                    text_comb=' '.join(text_list)
+                    if dest_lang=='en':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'en', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='kn':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'kn', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ta':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ta', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='hi':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'hi', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='te':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'te', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ja':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ja', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='fr':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'fr', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Japanese':
+                if st.button('Process'):
+                    # st.write(text_comb)
+                    # txt=translator.detect('この文章は日本語で書かれました。')
+                    image=Image.open(image_file)
+                    lang='ja'
+                    reader = Reader([lang])
+                    bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                    draw_boxes(image,bounds)
+                    text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                    text_comb=' '.join(text_list)
+                    if dest_lang=='en':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'en', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='kn':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'kn', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ta':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ta', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='hi':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'hi', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='te':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'te', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='ja':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'ja', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                    if dest_lang=='fr':
+                        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                        lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                        # st.write(translated)
+                        st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                        speech = gTTS(text = translated, lang = 'fr', slow = False)
+                        speech.save('user_trans.mp3')
+                        audio_file = open('user_trans.mp3', 'rb')
+                        audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                        st.success(translated)
+                        st.image(image)
+                        st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='French':
+            if st.button('Process'):
+                # st.write(text_comb)
+                # txt=translator.detect('この文章は日本語で書かれました。')
+                image=Image.open(image_file)
+                lang='fr'
+                reader = Reader([lang])
+                bounds=reader.readtext(image, add_margin=0.3,width_ths=2.0,link_threshold=0.8,decoder='beamsearch',blocklist='=-')
+                draw_boxes(image,bounds)
+                text_list=reader.readtext(image,link_threshold=0.8,add_margin=0.55,width_ths=0.7,decoder='beamsearch',blocklist='=-',detail=0)
+                text_comb=' '.join(text_list)
+                if dest_lang=='en':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'en', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='kn':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'kn', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='ta':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'ta', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='hi':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'hi', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='te':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'te', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='ja':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'ja', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+                if dest_lang=='fr':
+                    translated = GoogleTranslator(source='auto', target=dest_lang).translate(text_comb)
+                    lang = single_detection(text_comb, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                    # st.write(translated)
+                    st.write('The detected language is  '+ lang + ' is converted to '+dest_lang)
+                    speech = gTTS(text = translated, lang = 'fr', slow = False)
+                    speech.save('user_trans.mp3')
+                    audio_file = open('user_trans.mp3', 'rb')
+                    audio_bytes = audio_file.read()
+                    st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                    st.success(translated)
+                    st.image(image)
+                    st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+    if choice=='Translation':
+        st.subheader('Here the entered text is converted to requied language')
+        st.write(f"Translate your thoughts.")
+        input_text = st.text_input('Enter whatever')
+        list_lang=st.sidebar.selectbox("select language",['Kannada','Telugu','Tamil','Hindi','Japanese','French'])
+        trans=GoogleTranslator()
+        if list_lang=='Telugu':
+            if st.button('Translate'):
+                lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                translated = GoogleTranslator(source='auto', target='te').translate(text=input_text)
+                st.success(translated)
+                speech = gTTS(text = translated, lang = 'te', slow = False)
+                speech.save('user_trans.mp3')
+                audio_file = open('user_trans.mp3', 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Kannada':
+            if st.button('Translate'):
+                lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                translated = GoogleTranslator(source='auto', target='kn').translate(text=input_text)
+                st.success(translated)
+                speech = gTTS(text = translated, lang = 'kn', slow = False)
+                speech.save('user_trans.mp3')
+                audio_file = open('user_trans.mp3', 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Tamil':
+            if st.button('Translate'):
+                lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                translated = GoogleTranslator(source='auto', target='ta').translate(text=input_text)
+                st.success(translated)
+                speech = gTTS(text = translated, lang = 'ta', slow = False)
+                speech.save('user_trans.mp3')
+                audio_file = open('user_trans.mp3', 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Japanese':
+            if st.button('Translate'):
+                lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                translated = GoogleTranslator(source='auto', target='ja').translate(text=input_text)
+                st.success(translated)
+                speech = gTTS(text = translated, lang = 'ja', slow = False)
+                speech.save('user_trans.mp3')
+                audio_file = open('user_trans.mp3', 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='French':
+            if st.button('Translate'):
+                lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                translated = GoogleTranslator(source='auto', target='fr').translate(text=input_text)
+                st.success(translated)
+                speech = gTTS(text = translated, lang = 'fr', slow = False)
+                speech.save('user_trans.mp3')
+                audio_file = open('user_trans.mp3', 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+        if list_lang=='Hindi':
+            if st.button('Translate'):
+                lang = single_detection(list_lang, api_key='0a0cb5911f0575c03510ceabe182c2ad')
+                translated = GoogleTranslator(source='auto', target='hi').translate(text=input_text)
+                st.success(translated)
+                speech = gTTS(text = translated, lang = 'hi', slow = False)
+                speech.save('user_trans.mp3')
+                audio_file = open('user_trans.mp3', 'rb')
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/ogg',start_time=0)
+                st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
+    if choice=='About Us':
+         st.title('About the Text To Speech')
+         st.subheader('Steps to Follow :-')
+         st.write('1.Select and Drop the image to be processed \n')
+         st.write('2.Select the language present in the image using the sidebar \n')
+         st.write('3.Select the Desired language to be converted \n'
+         """ \n
+             'english': 'en', \n
+             'kannada': 'kn', \n
+             'hindi': 'hi', \n
+             'telugu': 'te', \n
+             'tamil': 'ta',  \n
+             'japanese': 'ja', \n  
+             'french': 'fr' \n """)
+         st.write('4.Click on the Process button \n')
+         st.write('5.Ola text is converted and the required speech is ready \n')
+         st.write('6.Enjoy Learning New things \n')
+         st.markdown("""Built with Streamlit by \n
+         Ranjith R  \n
+         Ullas Raju CR  \n
+         Sujeeth Kumar GK  \n
+         Madhan Kumar M """)
+         st.subheader('website url: https://share.streamlit.io/madhan02k/text2speech_app/main/app.py ')
+         st.subheader("Expect the Best , Plan for the Worst, and Prepare to be Surprised  \n"
+                      "  -Denis Waitly")
+         video_file=open('kicku.mp4','rb')
+         video_bytes=video_file.read()
+         st.video(video_bytes)
+
+    if choice=='Speech Recognition':
+        if st.button("Click to record"): 
+            r=sr.Recognizer()
+            with sr.Microphone() as source:
+                st.write("say something")
+                audio=r.listen(source)
+                try:
+                    text1=r.recognize_google(audio)
+                    st.write("You  said :",text1)
+                except:
+                    st.write("Please say again ..")
+                # st.write text
+            hr=gTTS(text=text1,lang='en')
+            hr.save('user_trans.wav')
+            audio_file = open('user_trans.wav', 'rb')
+            audio_bytes = audio_file.read()
+            st.audio(audio_bytes, format='audio/ogg',start_time=0)
+            st.image("https://media.giphy.com/media/8yFtm4Ui2viZta7TdO/giphy.gif",width=300)
 
 
 
