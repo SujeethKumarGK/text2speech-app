@@ -44,16 +44,16 @@ def draw_boxes(image, bounds, color='yellow',width=2): # function to draw boundi
         draw.line([*p0, *p1, *p2, *p3, *p0], fill=color, width=width)
     return image
 
-def set_image_dpi(file_path):
-    im = Image.open(file_path)
-    length_x, width_y = im.size
-    factor = min(1, float(1024.0 / length_x))
-    size = int(factor * length_x), int(factor * width_y)
-    im_resized = im.resize(size, Image.ANTIALIAS)
-    temp_file = tempfile.NamedTemporaryFile(delete=False,   suffix='.png')
-    temp_filename = temp_file.name
-    im_resized.save(temp_filename, dpi=(300, 300))
-    return temp_filename
+# def set_image_dpi(file_path):
+#     im = Image.open(file_path)
+#     length_x, width_y = im.size
+#     factor = min(1, float(1024.0 / length_x))
+#     size = int(factor * length_x), int(factor * width_y)
+#     im_resized = im.resize(size, Image.ANTIALIAS)
+#     temp_file = tempfile.NamedTemporaryFile(delete=False,   suffix='.png')
+#     temp_filename = temp_file.name
+#     im_resized.save(temp_filename, dpi=(300, 300))
+#     return temp_filename
 
 def main():
     st.title('Image to Speech')
@@ -61,7 +61,7 @@ def main():
     choice=st.sidebar.selectbox('Select Activity',['Image to Speech','Translation','Speech Recognition','About Us'])
 
     if choice=='Image to Speech':
-        images = st.file_uploader("Upload Image",type=['jpg','png','jpeg'])
+        image_file = st.file_uploader("Upload Image",type=['jpg','png','jpeg'])
         #print(images)
         # st.progress(100)
         # file_details = {"Filename":image_file,"FileType":image_file.type,"FileSize":image_file.size}
@@ -73,8 +73,8 @@ def main():
         #     my_bar.progress(i + 1)
         #     #time.sleep(0.1)
         if images is not None:
-            image_file = set_image_dpi(images)
-            image=Image.open(image_file)
+#             image_file = set_image_dpi(images)
+            imag_file=Image.open(image_file)
             size=(240,240)
             image=image.resize(size)
             # print(image_file)
