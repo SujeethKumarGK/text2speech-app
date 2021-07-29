@@ -24,6 +24,7 @@ click==7.1.2
 click-didyoumean==0.0.3
 click-plugins==1.1.1
 click-repl==0.2.0
+configparser==5.0.2
 colorama==0.4.4
 cryptography==3.4.7
 cycler==0.10.0
