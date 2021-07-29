@@ -11,6 +11,9 @@ from PIL import ImageDraw
 from easyocr import Reader
 import detectlanguage
 import speech_recognition as sr
+import tempfile
+from tempfile import NamedTemporaryFile
+import imutils
 import time
 import os
 import pyaudio
