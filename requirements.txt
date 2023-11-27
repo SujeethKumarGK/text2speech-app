@@ -43,7 +43,6 @@ ecdsa==0.17.0
 entrypoints==0.3
 filelock==3.0.12
 future==0.18.2
-geoplotlib==0.3.2
 gitdb==4.0.7
 GitPython==3.1.14
 google-trans-new==1.1.9
