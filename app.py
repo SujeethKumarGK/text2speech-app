@@ -72,7 +72,7 @@ def main():
         #     latest_iteration.text(f'Iteration {i+1}')
         #     my_bar.progress(i + 1)
         #     #time.sleep(0.1)
-        if image is not None:
+        if image_file is not None:
 #             image_file = set_image_dpi(images)
             image=Image.open(image_file)
             size=(240,240)
